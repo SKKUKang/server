@@ -26,21 +26,29 @@ def process_request():
     try:
         if 'file' in request.files:
             file = request.files['file']
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                result = process_image(filepath)  # 이미지 처리
-                analysis_results['imageAnalysis'] = result  # 분석 결과 저장
-                return jsonify({"status": "success", "data": result})
-
-            return jsonify({"status": "error", "message": "Invalid file type"}), 400
-
+            filepath = None
+            try:
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    result = process_image(filepath)  # 이미지 처리
+                    analysis_results['Analysis'] = result  # 분석 결과 저장
+                    return jsonify({"status": "success", "data": result})
+            except Exception as e:
+                print(f"Error: {e.strerror}")
+                return jsonify({"status": "error", "message": "Invalid file type"}), 400
+            finally:
+                if filepath and os.path.exists(filepath):
+                    try:
+                        os.remove(filepath)
+                    except OSError as e:
+                        print(f"Error removing file: {e.strerror}")
         elif request.is_json and 'url' in request.json:
             url = request.json.get('url')
             if url:
                 result = crawl_subject_texts(url)  # URL 크롤링
-                analysis_results['urlAnalysis'] = result  # 분석 결과 저장
+                analysis_results['Analysis'] = result  # 분석 결과 저장
                 return jsonify({"status": "success", "data": result})
             return jsonify({"status": "error", "message": "Invalid URL"}), 400
 
@@ -74,10 +82,7 @@ def get_result():
         # 설문 응답과 분석 데이터를 결합하여 반환
         result = {
             "survey": survey_responses.get('surveyAnswers', {}),
-            "analysis": {
-                "imageAnalysis": analysis_results.get('imageAnalysis', {}),
-                "urlAnalysis": analysis_results.get('urlAnalysis', {}),
-            }
+            "analysis": analysis_results.get('Analysis', {}),
         }
         return jsonify({"status": "success", "data": result})
     except Exception as e:

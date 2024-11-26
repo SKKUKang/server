@@ -122,7 +122,4 @@ def process_image(image_path):
     return extractor.result
 
 
-# 테스트
-if __name__ == "__main__":
-    result = process_image("../images/timetable.jpg")
-    print(result)
+
