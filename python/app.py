@@ -5,6 +5,7 @@ from ocr import process_image
 from webcroll import crawl_subject_texts
 from flask_cors import CORS
 import shutil
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -91,16 +92,29 @@ def get_result():
         if not request_id:
             return jsonify({"status": "error", "message": "Missing requestId"}), 400
 
-        # requestId 기반으로 결과를 조회
-        result = {
-            "survey": survey_responses.get(request_id, {}),
-            "analysis": analysis_results.get(request_id, {}).get("analysis", {}),
-        }
+        # 결과를 조회할 때까지 대기
+        timeout = 30  # 최대 대기 시간 (초)
+        wait_time = 1   # 상태 체크 간격 (초)
+        elapsed_time = 0
+        
+        while elapsed_time < timeout:
+            # requestId 기반으로 결과 조회
+            result = {
+                "survey": survey_responses.get(request_id, {}),
+                "analysis": analysis_results.get(request_id, {}).get("analysis", {}),
+            }
 
-        if not result["survey"] and not result["analysis"]:
-            return jsonify({"status": "error", "message": "No data found for the given requestId"}), 404
+            # 분석이 준비되었으면 결과 반환
+            if result["survey"] and result["analysis"]:
+                return jsonify({"status": "success", "data": result})
 
-        return jsonify({"status": "success", "data": result})
+            # 분석이 준비되지 않았으면 대기 후 재시도
+            time.sleep(wait_time)
+            elapsed_time += wait_time
+
+        # timeout이 지나면 분석 결과가 없다는 응답
+        return jsonify({"status": "error", "message": "Analysis result not ready after waiting"}), 404
+
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
