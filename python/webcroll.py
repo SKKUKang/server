@@ -4,6 +4,9 @@ import json
 import io
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from webdriver_manager.chrome import ChromeDriverManager
 from process import processing
@@ -22,7 +25,16 @@ def crawl_subject_texts(url):
     driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.get(url)
     
-    time.sleep(2)
+    # tablebody 클래스가 로드될 때까지 최대 10초까지 기다림
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "tablebody"))
+        )
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        driver.quit()
+        return {"error": "tablebody 클래스를 찾을 수 없습니다."}
+    
     page_source = driver.page_source
     driver.quit()
     
@@ -40,13 +52,11 @@ def crawl_subject_texts(url):
                 day=days[i]
                 style = lesson.get('style', 'No style attribute')
                 h3_text = lesson.find('h3').get_text(strip=True) if lesson.find('h3') else 'No h3 element'
-                #em_text = lesson.find('em').get_text(strip=True) if lesson.find('em') else 'No em element'
                 span_text = lesson.find('span').get_text(strip=True) if lesson.find('span') else 'No span element'
                 subject_data.append({
                     "요일": day,
                     "시간": style,
                     "과목명": h3_text,
-                    #"교수": em_text,
                     "강의실": span_text
                 })
     else:
