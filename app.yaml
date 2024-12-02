@@ -1,0 +1,10 @@
+runtime: python311
+
+entrypoint: gunicorn -w 4 -b :8080 app:app
+
+instance_class: F1
+
+env_variables:
+  FLASK_ENV: 'production'
+  TESSERACT_CMD: './Tesseract-OCR/tesseract.exe'
+  TESSDATA_PREFIX: './Tesseract-OCR/tessdata'

@@ -8,9 +8,9 @@ import shutil
 import time
 
 app = Flask(__name__)
-CORS(app, origins="http://localhost:3000")
+CORS(app, resources={r"/*": {"origins": "*"}})  # 모든 도메인 허용
 
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = '/tmp/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -76,8 +76,7 @@ def survey_response():
 
         # 설문 데이터를 저장
         if request.is_json and 'surveyAnswers' in request.json:
-            survey_answers = request.json['surveyAnswers']
-            survey_responses[request_id] = survey_answers  # requestId로 저장
+            survey_responses[request_id] = request.json['surveyAnswers']  # requestId로 저장
             return jsonify({"status": "success", "message": "Survey data received successfully"})
         return jsonify({"status": "error", "message": "Survey answers missing"}), 400
 
@@ -118,5 +117,12 @@ def get_result():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8000, debug=True)
+@app.route('/')
+def home():
+    return "Welcome to the 복학왕조!"
+
+
+
+if __name__ == '__main__': 
+    app.run(host='0.0.0.0', port=8080, debug=False)
+
