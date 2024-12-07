@@ -6,6 +6,7 @@ from webcroll import crawl_subject_texts
 from flask_cors import CORS
 import shutil
 import time
+from best_slot import find_best_slot
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # 모든 도메인 허용
@@ -19,6 +20,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # 설문 데이터와 분석 결과를 저장할 딕셔너리 (requestId 기반 저장)
 survey_responses = {}
 analysis_results = {}
+etc = {}
+
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -51,7 +55,6 @@ def process_request():
                             shutil.rmtree(folder_path)  # 해당 폴더 및 하위 파일 삭제
                         except Exception as e:
                             print(f"Error cleaning up folder {folder_path}: {e}")
-
         # URL 처리
         elif request.is_json and 'url' in request.json:
             url = request.json.get('url')
@@ -73,10 +76,10 @@ def survey_response():
         request_id = request.json.get('requestId')
         if not request_id:
             return jsonify({"status": "error", "message": "Missing requestId"}), 400
-
         # 설문 데이터를 저장
         if request.is_json and 'surveyAnswers' in request.json:
             survey_responses[request_id] = request.json['surveyAnswers']  # requestId로 저장
+            etc[request_id] = analysis_results[request_id]["analysis"]  # requestId로 저장
             return jsonify({"status": "success", "message": "Survey data received successfully"})
         return jsonify({"status": "error", "message": "Survey answers missing"}), 400
 
@@ -98,14 +101,15 @@ def get_result():
         
         while elapsed_time < timeout:
             # requestId 기반으로 결과 조회
-            result = {
+            totalresult = {
                 "survey": survey_responses.get(request_id, {}),
                 "analysis": analysis_results.get(request_id, {}).get("analysis", {}),
+                "etc": etc.get(request_id, {})
             }
 
             # 분석이 준비되었으면 결과 반환
-            if result["survey"] and result["analysis"]:
-                return jsonify({"status": "success", "data": result})
+            if totalresult["survey"] and totalresult["analysis"] and totalresult["etc"]:
+                return jsonify({"status": "success", "data": totalresult})
 
             # 분석이 준비되지 않았으면 대기 후 재시도
             time.sleep(wait_time)

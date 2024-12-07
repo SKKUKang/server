@@ -28,6 +28,7 @@ class TimetableExtractor:
 
         self.result = []  # 최종 데이터 저장 리스트
         self.time_dict = {}  # 시간 매핑 딕셔너리
+ 
 
     def getlectrue(self):
         hsv = cv2.cvtColor(self.image_file, cv2.COLOR_BGR2HSV)
@@ -56,7 +57,7 @@ class TimetableExtractor:
     def get_pixel_per_hour(self):
         left_image = self.image_file[:, :int(self.width * 0.1)]
         gray = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY)
-        thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)[1]
+        thresh = cv2.threshold(gray, 130, 255, cv2.THRESH_BINARY_INV)[1]
         custom_config = r'--oem 3 --psm 6'
         text_data = pytesseract.image_to_data(thresh, config=custom_config, output_type=pytesseract.Output.DICT)
 
