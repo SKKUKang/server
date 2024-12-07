@@ -6,7 +6,7 @@ from webcroll import crawl_subject_texts
 from flask_cors import CORS
 import shutil
 import time
-from best_slot import find_best_slot
+from main import main_function
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # 모든 도메인 허용
@@ -79,7 +79,7 @@ def survey_response():
         # 설문 데이터를 저장
         if request.is_json and 'surveyAnswers' in request.json:
             survey_responses[request_id] = request.json['surveyAnswers']  # requestId로 저장
-            etc[request_id] = analysis_results[request_id]["analysis"]  # requestId로 저장
+            etc[request_id] = main_function(analysis_results[request_id]["analysis"])  # requestId로 저장
             return jsonify({"status": "success", "message": "Survey data received successfully"})
         return jsonify({"status": "error", "message": "Survey answers missing"}), 400
 
@@ -124,9 +124,6 @@ def get_result():
 @app.route('/')
 def home():
     return "Welcome to the 복학왕조!"
-
-
-
 if __name__ == '__main__': 
     app.run(host='0.0.0.0', port=8080, debug=False)
 

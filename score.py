@@ -13,9 +13,10 @@ def print_schedule(data):
 
 
 def time_to_minutes(time):
+    time = int(time)
     hours = time // 100
     minutes = time % 100
-    return hours * 60 + minutes
+    return int(hours * 60 + minutes)
 
 
 def find_day_off(data):
@@ -94,16 +95,16 @@ def building_route(data):
 
 def check_lunch_time(data):
     total_penalty = 0
-    lunch_start = time_to_minutes(1100)
-    lunch_end = time_to_minutes(1400)
+    lunch_start = int(time_to_minutes(1100))
+    lunch_end = int(time_to_minutes(1400))
     lunch_min_time = 30
 
     for day, subjects in data.items():
         if not subjects:
             continue
         subjects.sort(key=lambda x: x.start_time)
-        first_start = time_to_minutes(subjects[0].start_time)
-        last_end = time_to_minutes(subjects[-1].end_time)
+        first_start = int(time_to_minutes(subjects[0].start_time))
+        last_end = int(time_to_minutes(subjects[-1].end_time))
 
         if first_start >= lunch_start + lunch_min_time:
             continue
@@ -112,9 +113,9 @@ def check_lunch_time(data):
 
         lunch_possible = False
         for i in range(len(subjects) - 1):
-            current_end = time_to_minutes(subjects[i].end_time)
-            next_start = time_to_minutes(subjects[i + 1].start_time)
-            if current_end < lunch_end and next_start > lunch_start and (next_start - current_end) >= lunch_min_time:
+            current_end = int(time_to_minutes(subjects[i].end_time))
+            next_start = int(time_to_minutes(subjects[i + 1].start_time))
+            if int(current_end) < int(lunch_end) and next_start > lunch_start and (next_start - current_end) >= lunch_min_time:
                 lunch_possible = True
                 break
         if not lunch_possible:
@@ -130,8 +131,8 @@ def find_continuous_classes(data):
             continue
         continuous_count = 0
         for i in range(len(subjects) - 1):
-            current_end = time_to_minutes(subjects[i].end_time)
-            next_start = time_to_minutes(subjects[i + 1].start_time)
+            current_end = int(time_to_minutes(subjects[i].end_time))
+            next_start = int(time_to_minutes(subjects[i + 1].start_time))
             gap = next_start - current_end
             if gap > 0 and gap <= 16:
                 continuous_count += 1
@@ -148,7 +149,7 @@ def find_evening_classes(data):
     total_penalty = 0
     for day, subjects in data.items():
         for subject in subjects:
-            if subject.start_time >= 1800:
+            if int(subject.start_time) >= 1800:
                 total_penalty -= 5
     return total_penalty
 
@@ -184,4 +185,4 @@ def calculate_total_score(data):
     total_score += check_lunch_time(data)
     total_score += find_continuous_classes(data)
     total_score += find_evening_classes(data)
-    return total_score
+    return int(total_score)

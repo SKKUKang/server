@@ -7,6 +7,7 @@ def format_time_in_korean(time):
     return f"{hours}시 {minutes}분"
 
 def adjust_start_time_to_full_or_half_hour(time):
+    time= int(time)
     hours = time // 100
     minutes = time % 100
     if minutes < 30:
@@ -25,7 +26,7 @@ def find_best_slot(subject_arr):
         building = get_building(lecture[4]) 
         data[day].append(Subject(day, name, start_time, end_time, building))  
 
-    best_score = float('-inf')
+    best_score = int('-99999999999999999')
     best_slot = None
     new_class_duration = 75  # 새 수업 시간 (75분)
 
@@ -34,11 +35,11 @@ def find_best_slot(subject_arr):
 
         # 공강일 처리
         if not subjects:
-            start = adjust_start_time_to_full_or_half_hour(800)  
+            start = int(adjust_start_time_to_full_or_half_hour(800))
             end = 1800 
             while start + new_class_duration <= end:
                 end_time = start + (new_class_duration // 60) * 100 + (new_class_duration % 60)
-                if end_time % 100 >= 60:
+                if int(end_time) % 100 >= 60:
                     end_time += 40
 
                 temp_subject = Subject(day, "New Class", start, end_time, "임시 건물")
@@ -88,9 +89,8 @@ def find_best_slot(subject_arr):
                 start += 100 if start % 100 == 0 else 70  
 
     if best_slot:
-        best_slot = (
-            f"최적의 시간대: {best_slot[0]}요일 {format_time_in_korean(best_slot[1])} - {format_time_in_korean(best_slot[2])} (점수: {best_score})"
-        )
+        return best_slot
     else:
-        best_slot="추가할 최적의 시간대를 찾을 수 없습니다."
-    return best_slot
+        best_slot="No available slot"
+        return best_slot
+

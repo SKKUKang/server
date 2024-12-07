@@ -19,14 +19,14 @@ def convert_to_dict(data):
 
 def analyze_timetable(data):
     features = {
-        "아침형 인간": False,
-        "저녁형 인간": False,
+        "아침형인간": False,
+        "저녁형인간": False,
         "베짱이": False,
-        "공강 마스터": False,
-        "건물 여행자": False,
-        "연강 마스터": False,
+        "공강마스터": False,
+        "건물여행자": False,
+        "연강마스터": False,
         "마라토너": False,
-        "오후만 출근족": False,
+        "오후만출근족": False,
     }
 
     total_classes = 0
@@ -66,7 +66,7 @@ def analyze_timetable(data):
                 evening_class = True
 
             # 오후만 출근족
-            if subject.start_time < 1200:
+            if int(subject.start_time) < 1200:
                 afternoon_only = False
 
             # 연강
@@ -93,13 +93,20 @@ def analyze_timetable(data):
             intense_days += 1
 
     # 최종 조건 판단
-    features["아침형 인간"] = morning_days >= 3
-    features["저녁형 인간"] = evening_days >= 3
+    features["아침형인간"] = morning_days >= 3
+    features["저녁형인간"] = evening_days >= 3
     features["베짱이"] = total_classes <= 4
-    features["공강 마스터"] = free_days >= 2
-    features["건물 여행자"] = travel_days >= 2
-    features["연강 마스터"] = intense_days >= 2
+    features["공강마스터"] = free_days >= 2
+    features["건물여행자"] = travel_days >= 2
+    features["연강마스터"] = intense_days >= 2
     features["마라토너"] = marathon_days >= 1
-    features["오후만 출근족"] = afternoon_only_days >= 4
+    features["오후만출근족"] = afternoon_only_days >= 4
 
-    return features
+    for feature, value in features.items():
+        if(value):
+            return feature
+        
+
+    return "보통인간"  # 모든 조건을 만족하지 않을 경우
+
+

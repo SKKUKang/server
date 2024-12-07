@@ -65,7 +65,7 @@ def crawl_subject_texts(url):
     return process_result
 
 if __name__ == "__main__":
-    url = sys.argv[1]
+    url = "https://everytime.kr/@cisJHCIA5CpOMheqlQuR"
     crawl_result = crawl_subject_texts(url)
     process_result = processing(crawl_result)
     print(process_result)
