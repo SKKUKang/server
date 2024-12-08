@@ -21,6 +21,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 survey_responses = {}
 analysis_results = {}
 etc = {}
+# 상태를 관리하는 딕셔너리
+task_status = {}  # { requestId: "processing" | "completed" | "error" }
+
 
 options = {'아침 수업이 없는 것' : 0, '점심 시간 확보' : 1, '저녁 수업 최소화' : 2, '건물 간 동선 최소화' : 3, '연강 최소화' : 4, '공강일 개수' :5}
 
@@ -32,65 +35,85 @@ def allowed_file(filename):
 @app.route('/api/process', methods=['POST'])
 def process_request():
     try:
-        # requestId를 요청에서 가져옴
         request_id = request.form.get('requestId') or request.json.get('requestId')
         if not request_id:
             return jsonify({"status": "error", "message": "Missing requestId"}), 400
-# 파일 업로드 처리
+
+        task_status[request_id] = "processing"  # 작업 상태 초기화
+
+        # 파일 업로드 처리
         if 'file' in request.files:
             file = request.files['file']
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                folder_path = os.path.join(app.config['UPLOAD_FOLDER'], request_id)  # 생성된 폴더 경로
+                folder_path = os.path.join(app.config['UPLOAD_FOLDER'], request_id)
                 filepath = os.path.join(folder_path, filename)
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)
                 file.save(filepath)
                 try:
                     result = process_image(filepath)  # 이미지 처리
-                    analysis_results[request_id] = {"analysis": result}  # requestId로 저장
+                    analysis_results[request_id] = {"analysis": result}
+                    task_status[request_id] = "completed"  # 작업 상태 완료로 설정
                     return jsonify({"status": "success", "data": result})
                 finally:
-                    # 업로드 시 생성된 폴더 삭제
                     if os.path.exists(folder_path):
-                        try:
-                            shutil.rmtree(folder_path)  # 해당 폴더 및 하위 파일 삭제
-                        except Exception as e:
-                            print(f"Error cleaning up folder {folder_path}: {e}")
-        # URL 처리
+                        shutil.rmtree(folder_path)
         elif request.is_json and 'url' in request.json:
             url = request.json.get('url')
             if url:
-                result = crawl_subject_texts(url)  # URL 크롤링
-                analysis_results[request_id] = {"analysis": result}  # requestId로 저장
+                result = crawl_subject_texts(url)
+                analysis_results[request_id] = {"analysis": result}
+                task_status[request_id] = "completed"  # 작업 상태 완료로 설정
                 return jsonify({"status": "success", "data": result})
             return jsonify({"status": "error", "message": "Invalid URL"}), 400
 
+        task_status[request_id] = "error"  # 작업 실패로 설정
         return jsonify({"status": "error", "message": "No valid input provided"}), 400
 
     except Exception as e:
+        task_status[request_id] = "error"  # 작업 실패로 설정
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route('/api/survey', methods=['POST'])
 def survey_response():
     try:
-        # requestId를 요청에서 가져옴
         request_id = request.json.get('requestId')
         if not request_id:
             return jsonify({"status": "error", "message": "Missing requestId"}), 400
-        # 설문 데이터를 저장
+
+        # 작업 완료 여부 확인 및 대기
+        timeout = 30  # 최대 대기 시간 (초)
+        wait_time = 1  # 상태 체크 간격 (초)
+        elapsed_time = 0
+
+        while elapsed_time < timeout:
+            if task_status.get(request_id) == "completed":
+                break
+            elif task_status.get(request_id) == "error":
+                return jsonify({"status": "error", "message": "Processing failed"}), 500
+            time.sleep(wait_time)
+            elapsed_time += wait_time
+
+        # timeout 이후에도 작업이 완료되지 않으면 오류 반환
+        if task_status.get(request_id) != "completed":
+            return jsonify({"status": "error", "message": "Processing not completed in time"}), 504
+
+        # 설문 데이터 저장
         if request.is_json and 'surveyAnswers' in request.json:
-            survey_responses[request_id] = request.json['surveyAnswers']  # requestId로 저장
-            print(survey_responses[request_id])
+            survey_responses[request_id] = request.json['surveyAnswers']
             first = int(options[survey_responses[request_id].get('first')])
             second = int(options[survey_responses[request_id].get('second')])
             third = int(options[survey_responses[request_id].get('third')])
-            print(first, second, third)
-            etc[request_id] = main_function(analysis_results[request_id]["analysis"], first, second, third)  # requestId로 저장
+
+            etc[request_id] = main_function(analysis_results[request_id]["analysis"], first, second, third)
             return jsonify({"status": "success", "message": "Survey data received successfully"})
+
         return jsonify({"status": "error", "message": "Survey answers missing"}), 400
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route('/api/result', methods=['GET'])
 def get_result():
@@ -125,6 +148,7 @@ def get_result():
         return jsonify({"status": "error", "message": "Analysis result not ready after waiting"}), 404
 
     except Exception as e:
+        print(3)
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/')
