@@ -107,6 +107,6 @@ def analyze_timetable(data):
             return feature
         
 
-    return "보통인간"  # 모든 조건을 만족하지 않을 경우
+    return "황금밸런스"  # 모든 조건을 만족하지 않을 경우
 
 
