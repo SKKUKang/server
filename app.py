@@ -22,6 +22,8 @@ survey_responses = {}
 analysis_results = {}
 etc = {}
 
+options = {'아침 수업이 없는 것' : 0, '점심 시간 확보' : 1, '저녁 수업 최소화' : 2, '건물 간 동선 최소화' : 3, '연강 최소화' : 4, '공강일 개수' :5}
+
 
 
 def allowed_file(filename):
@@ -43,7 +45,6 @@ def process_request():
                 filepath = os.path.join(folder_path, filename)
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)
                 file.save(filepath)
-
                 try:
                     result = process_image(filepath)  # 이미지 처리
                     analysis_results[request_id] = {"analysis": result}  # requestId로 저장
@@ -79,7 +80,12 @@ def survey_response():
         # 설문 데이터를 저장
         if request.is_json and 'surveyAnswers' in request.json:
             survey_responses[request_id] = request.json['surveyAnswers']  # requestId로 저장
-            etc[request_id] = main_function(analysis_results[request_id]["analysis"])  # requestId로 저장
+            print(survey_responses[request_id])
+            first = int(options[survey_responses[request_id].get('first')])
+            second = int(options[survey_responses[request_id].get('second')])
+            third = int(options[survey_responses[request_id].get('third')])
+            print(first, second, third)
+            etc[request_id] = main_function(analysis_results[request_id]["analysis"], first, second, third)  # requestId로 저장
             return jsonify({"status": "success", "message": "Survey data received successfully"})
         return jsonify({"status": "error", "message": "Survey answers missing"}), 400
 

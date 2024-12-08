@@ -17,7 +17,7 @@ def extract_numbers(style):
     endTimeHour=startTimeHour+duringhour+carry
     endTimeminute=(startTimeminute+duringminute)%60
     endTime=endTimeHour*100+endTimeminute
-    return startTime,endTime
+    return int(startTime),int(endTime)
 
 def processing(json_data):
     # 각 json_data에서 객체의 2번째 값인 시간:style을 추출하여 다른 형태로 변형하기
@@ -30,7 +30,6 @@ def processing(json_data):
         course_name = subject.get("과목명", "No course name")
         classroom = subject.get("강의실", "No classroom")
         result.append([day, course_name, startTime, endTime, classroom])
-        print(result)
     return result
 
 # 4px 5분

@@ -19,32 +19,49 @@ def time_to_minutes(time):
     return int(hours * 60 + minutes)
 
 
-def find_day_off(data):
+def find_day_off(data, para):
     score = 0
+    if(para == "most"):
+        addval = 10
+    elif(para == "more"):
+        addval = 7
+    elif(para == "least"):
+        addval = 0
+    else:
+        addval = 5    
+
     if len(data['월']) == 0:
-        score += 10
+        score += addval*2
     if len(data['화']) == 0:
-        score += 5
+        score += addval
     if len(data['수']) == 0:
-        score += 5
+        score += addval
     if len(data['목']) == 0:
-        score += 5
+        score += addval
     if len(data['금']) == 0:
-        score += 10
+        score += addval*2
     return score
 
 
-def find_first_class(data):
+def find_first_class(data, para):
     score = 0
+    if(para == "most"):
+        addval = 10
+    elif(para == "more"):
+        addval = 7
+    elif(para == "least"):
+        addval = 0
+    else:
+        addval = 5     
     for day in data:
         for subject in data[day]:
             if subject.start_time == 900:
-                score -= 5
+                score -= addval
                 break
     return score
 
 
-def building_route(data):
+def building_route(data, para):
     building_distance = {
         ("인문관", "경제관"): 1,
         ("인문관", "경영관"): 2,
@@ -75,6 +92,15 @@ def building_route(data):
         ("수선관별관", "법학관"): 2,
         ("국제관", "법학관"): 6,
     }
+    if(para == "most"):
+        addval = 2
+    elif(para == "more"):
+        addval = 1.5
+    elif(para == "least"):
+        addval = 0
+    else:
+        addval = 1    
+
     total_penalty = 0
     for day, subjects in data.items():
         subjects.sort(key=lambda x: x.start_time)
@@ -90,14 +116,22 @@ def building_route(data):
                     distance_key, building_distance.get((next_.building, current.building), 0)
                 )
                 total_penalty -= penalty
-    return total_penalty
+    return int(total_penalty*addval)
 
 
-def check_lunch_time(data):
+def check_lunch_time(data, para):
     total_penalty = 0
     lunch_start = int(time_to_minutes(1100))
     lunch_end = int(time_to_minutes(1400))
     lunch_min_time = 30
+    if(para == "most"):
+        addval = 10
+    elif(para == "more"):
+        addval = 7
+    elif(para == "least"):
+        addval = 0
+    else:
+        addval = 5    
 
     for day, subjects in data.items():
         if not subjects:
@@ -119,12 +153,21 @@ def check_lunch_time(data):
                 lunch_possible = True
                 break
         if not lunch_possible:
-            total_penalty -= 5
+            total_penalty -= addval
 
     return total_penalty
 
 
-def find_continuous_classes(data):
+def find_continuous_classes(data, para):
+    if(para == "most"):
+        addval = 2
+    elif(para == "more"):
+        addval = 1.5
+    elif(para == "least"):
+        addval = 0
+    else:
+        addval = 1    
+
     total_penalty = 0
     for day, subjects in data.items():
         if not subjects:
@@ -142,19 +185,28 @@ def find_continuous_classes(data):
                 continuous_count = 0
         if continuous_count > 2:
             total_penalty -= (continuous_count - 2) * 5
-    return total_penalty
+    return  int(total_penalty*addval)
 
 
-def find_evening_classes(data):
+def find_evening_classes(data, para):
+    if(para == "most"):
+        addval = 10
+    elif(para == "more"):
+        addval = 7
+    elif(para == "least"):
+        addval = 0
+    else:
+        addval = 5    
+
     total_penalty = 0
     for day, subjects in data.items():
         for subject in subjects:
             if int(subject.start_time) >= 1800:
-                total_penalty -= 5
+                total_penalty -= addval
     return total_penalty
 
 
-def return_score(subject_arr):
+def return_score(subject_arr, first, second, third):
     data = {'월': [], '화': [], '수': [], '목': [], '금': []}
     sorted_subjects = sorted(subject_arr, key=lambda x: (x[0], x[2]))
     for subject in sorted_subjects:
@@ -168,21 +220,59 @@ def return_score(subject_arr):
         data[day].append(Subject(day, name, start_time, end_time, building))
 
     print_schedule(data)
-    total_score = 50
-    total_score += find_day_off(data)
-    total_score += find_first_class(data)
-    total_score += building_route(data)
-    total_score += check_lunch_time(data)
-    total_score += find_continuous_classes(data)
-    total_score += find_evening_classes(data)
-    return total_score
+    return calculate_total_score(data ,first, second, third)
 
-def calculate_total_score(data):
-    total_score = 50  # 기본 점수
-    total_score += find_day_off(data)
-    total_score += find_first_class(data)
-    total_score += building_route(data)
-    total_score += check_lunch_time(data)
-    total_score += find_continuous_classes(data)
-    total_score += find_evening_classes(data)
-    return int(total_score)
+def calculate_total_score(data, first, second, third):
+    para0="not"
+    para1="not"
+    para2="not"
+    para3="not"
+    para4="not"
+    para5="not"
+
+    if(first == 0):
+        para0 = "most"
+    elif(first == 1):
+        para1 = "most"
+    elif(first == 2):
+        para2 = "most"
+    elif(first == 3):
+        para3 = "most"
+    elif(first == 4):
+        para4 = "most"
+    elif(first == 5):
+        para5 = "most"
+
+    if(second == 0):
+        para0 = "more"
+    elif(second == 1):
+        para1 = "more"
+    elif(second == 2):
+        para2 = "more"
+    elif(second == 3):
+        para3 = "more"
+    elif(second == 4):
+        para4 = "more"
+    elif(second == 5):
+        para5 = "more"
+
+    if(third == 0):
+        para0 = "least"
+    elif(third == 1):
+        para1 = "least"
+    elif(third == 2):
+        para2 = "least"
+    elif(third == 3):
+        para3 = "least"
+    elif(third == 4):
+        para4 = "least"
+    elif(third == 5):
+        para5 = "least"
+    total_score = 50
+    total_score += find_day_off(data, para5)
+    total_score += find_first_class(data, para0)
+    total_score += building_route(data, para3)
+    total_score += check_lunch_time(data, para1)
+    total_score += find_continuous_classes(data, para4)
+    total_score += find_evening_classes(data, para2)
+    return total_score

@@ -15,7 +15,7 @@ def adjust_start_time_to_full_or_half_hour(time):
     else:
         return hours * 100 + 30  # 30분
 
-def find_best_slot(subject_arr):
+def find_best_slot(subject_arr,first,second,third):
     data = {'월': [], '화': [], '수': [], '목': [], '금': []}
     sorted_subjects = sorted(subject_arr, key=lambda x: (x[0], x[2]))
     for lecture in sorted_subjects:  
@@ -47,7 +47,7 @@ def find_best_slot(subject_arr):
                 temp_data[day].append(temp_subject)
                 temp_data[day].sort(key=lambda x: x.start_time)
 
-                score = calculate_total_score(temp_data)
+                score = calculate_total_score(temp_data,first,second,third)
                 if score > best_score:
                     best_score = score
                     best_slot = (day, start, end_time)
@@ -81,7 +81,7 @@ def find_best_slot(subject_arr):
                 temp_data[day].append(temp_subject)
                 temp_data[day].sort(key=lambda x: x.start_time)
 
-                score = calculate_total_score(temp_data)
+                score = calculate_total_score(temp_data,first,second,third)
                 if score > best_score:
                     best_score = score
                     best_slot = (day, start, end_time)

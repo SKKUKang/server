@@ -93,18 +93,18 @@ def convert_time_to_int(temp):
     return temp
 
 
-def main_function(result):
+def main_function(result, first, second, third):
     timetable_dict = convert_to_dict(result)
     result = convert_time_to_int(result)
 
     # 기존 시간표 점수 계산 및 출력
     print("\n기존 시간표 점수 계산:")
-    current_score = return_score(result)
+    current_score = return_score(result, first, second, third)
     print(f"기존 시간표 점수: {current_score}")
 
     # 최적 추가 시간대 계산
     print("\n최적 추가 시간대 계산:")
-    best_slot = find_best_slot(result)
+    best_slot = find_best_slot(result,first,second,third)
 
     if best_slot:
         print(f"추천 추가 시간: {best_slot[0]}요일 {best_slot[1]}-{best_slot[2]}")
