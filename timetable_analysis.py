@@ -23,8 +23,8 @@ def analyze_timetable(data):
         "저녁형인간": False,
         "베짱이": False,
         "공강마스터": False,
-        "건물여행자": False,
         "연강마스터": False,
+        "건물여행자": False,
         "마라토너": False,
         "오후만출근족": False,
     }
